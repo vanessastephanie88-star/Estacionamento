@@ -1,5 +1,8 @@
 package Estacionamento;
 
+//Vanessa Stephanie RA: 325129712
+//Julia Costa RA: 32511198
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -153,7 +156,7 @@ public class Estacionamento {
         }
         return null;
     }
-
+// Clase Veiculo
     public record Veiculo(String placa, LocalDateTime horaEntrada) {
     }
 }
