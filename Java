@@ -1,0 +1,159 @@
+package Estacionamento;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Estacionamento {
+
+    private static final int TOTAL_VAGAS = 10;
+    private static final List<Veiculo> veiculosEstacionados = new ArrayList<>();
+    private static double totalArrecadado = 0.0;
+    private static final double VALOR_PRIMEIRA_HORA = 12.0;
+    private static final double VALOR_HORA_ADICIONAL = 8.0;
+
+
+    static void main() {
+        Scanner scanner = new Scanner(System.in);
+        int opcao;
+
+        do {
+            System.out.println("\n--- Menu do Estacionamento ---");
+            System.out.println("1. Registrar Entrada");
+            System.out.println("2. Registrar Saída");
+            System.out.println("3. Vagas Disponíveis");
+            System.out.println("4. Veículos Presentes");
+            System.out.println("5. Pesquisar Veículo");
+            System.out.println("6. Relatório de Faturamento");
+            System.out.println("0. Sair");
+            System.out.print("Escolha uma opção: ");
+            opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            if (opcao == 1) {
+                registrarEntrada(scanner);
+            } else if (opcao == 2) {
+                registrarSaida(scanner);
+            } else if (opcao == 3) {
+                mostrarVagasDisponiveis();
+            } else if (opcao == 4) {
+                mostrarVeiculosPresentes();
+            } else if (opcao == 5) {
+                pesquisarVeiculo(scanner);
+            } else if (opcao == 6) {
+                mostrarRelatorioFaturamento();
+            } else if (opcao == 0) {
+                System.out.println("Saindo do sistema...");
+            } else {
+                System.out.println("Opção inválida. Tente novamente.");
+            }
+        } while (opcao != 0);
+
+        scanner.close();
+    }
+
+    private static void registrarEntrada(Scanner scanner) {
+        if (veiculosEstacionados.size() >= TOTAL_VAGAS) {
+            System.out.println("Estacionamento lotado. Não é possível registrar a entrada.");
+            return;
+        }
+
+        System.out.print("Informe a placa do veículo: ");
+        String placa = scanner.nextLine();
+
+        LocalDateTime horaEntrada = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm, dd/MM");
+        String horaEntradaFormatada = horaEntrada.format(formatter);
+        Veiculo veiculo = new Veiculo(placa, horaEntrada);
+        veiculosEstacionados.add(veiculo);
+
+        System.out.println("Entrada registrada com sucesso para o veículo de placa: " + placa +  " "  +horaEntradaFormatada);
+    }
+
+    private static void registrarSaida(Scanner scanner) {
+        System.out.print("Informe a placa do veículo para registrar a saída: ");
+        String placa = scanner.nextLine();
+
+        Veiculo veiculo = buscarVeiculo(placa);
+
+        if (veiculo == null) {
+            System.out.println("Veículo não encontrado no estacionamento.");
+            return;
+        }
+
+        LocalDateTime horaSaida = LocalDateTime.now();
+        Duration duracao = Duration.between(veiculo.horaEntrada(), horaSaida);
+        long tempoPermanenciaHoras = duracao.toHours();
+
+        // Garante que o tempo mínimo seja de 1 hora
+        if (duracao.toMinutes() > 0 && tempoPermanenciaHoras == 0) {
+            tempoPermanenciaHoras = 1;
+        }
+
+        double valorAPagar;
+        if (tempoPermanenciaHoras <= 1) {
+            valorAPagar = VALOR_PRIMEIRA_HORA;
+        } else {
+            valorAPagar = VALOR_PRIMEIRA_HORA + (tempoPermanenciaHoras - 1) * VALOR_HORA_ADICIONAL;
+        }
+
+        totalArrecadado += valorAPagar;
+        veiculosEstacionados.remove(veiculo);
+
+        System.out.println("Saída registrada com sucesso para o veículo de placa: " + placa);
+        System.out.println("Tempo de permanência: " + tempoPermanenciaHoras + " horas.");
+        System.out.println("Valor a pagar: R$ " + valorAPagar);
+    }
+
+    private static void mostrarVagasDisponiveis() {
+        int vagasOcupadas = veiculosEstacionados.size();
+        int vagasDisponiveis = TOTAL_VAGAS - vagasOcupadas;
+        System.out.println("Vagas disponíveis: " + vagasDisponiveis);
+        System.out.println("Vagas ocupadas: " + vagasOcupadas);
+    }
+
+    private static void mostrarVeiculosPresentes() {
+        if (veiculosEstacionados.isEmpty()) {
+            System.out.println("Não há veículos estacionados no momento.");
+        } else {
+            System.out.println("Veículos estacionados:");
+            for (Veiculo veiculo : veiculosEstacionados) {
+                System.out.println("Placa: " + veiculo.placa() + ", Hora de entrada: " + veiculo.horaEntrada().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+            }
+        }
+    }
+
+    private static void pesquisarVeiculo(Scanner scanner) {
+        System.out.print("Informe a placa do veículo para pesquisar: ");
+        String placa = scanner.nextLine();
+
+        Veiculo veiculo = buscarVeiculo(placa);
+
+        if (veiculo == null) {
+            System.out.println("Veículo não encontrado no estacionamento.");
+        } else {
+            System.out.println("Veículo encontrado!");
+            System.out.println("Placa: " + veiculo.placa());
+            System.out.println("Hora de entrada: " + veiculo.horaEntrada().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        }
+    }
+
+    private static void mostrarRelatorioFaturamento() {
+        System.out.println("Total arrecadado até o momento: R$ " + totalArrecadado);
+    }
+
+    private static Veiculo buscarVeiculo(String placa) {
+        for (Veiculo veiculo : veiculosEstacionados) {
+            if (veiculo.placa().equals(placa)) {
+                return veiculo;
+            }
+        }
+        return null;
+    }
+
+    public record Veiculo(String placa, LocalDateTime horaEntrada) {
+    }
+}
