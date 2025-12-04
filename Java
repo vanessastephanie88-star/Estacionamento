@@ -156,7 +156,8 @@ public class Estacionamento {
         }
         return null;
     }
-// Clase Veiculo
+
+// Classe Veiculo
     public record Veiculo(String placa, LocalDateTime horaEntrada) {
     }
 }
